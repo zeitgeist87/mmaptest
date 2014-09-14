@@ -21,9 +21,10 @@ int main(int argc, char **argv) {
 	char *path;
 	unsigned int write_count;
 	unsigned long file_size;
+	unsigned long file_offset = 0;
 	char* data;
 
-	if (argc != 4) {
+	if (argc < 4) {
 		fprintf(stderr, "Too few arguments\n");
 		return EXIT_FAILURE;
 	}
@@ -31,6 +32,8 @@ int main(int argc, char **argv) {
 	path = argv[1];
 	file_size = atol(argv[2]) * 1024 * 1024;
 	write_count = atoi(argv[3]);
+	if (argc > 4)
+		file_offset = atol(argv[4]) * 1024 * 1024;
 
 	if ((fd = open("/dev/urandom", O_RDONLY)) < 0) {
 		perror("Error opening /dev/urandom");
@@ -44,8 +47,8 @@ int main(int argc, char **argv) {
 
 	close(fd);
 
-	printf("Initializeing target...\nPath: %s, Size: %luMB, Count: %u\n",
-			path, file_size / 1024 / 1024, write_count);
+	printf("Initializeing target...\nPath: %s, Size: %luMB, Offset: %luMB, Count: %u\n",
+			path, file_size / 1024 / 1024, file_offset / 1024 / 1024, write_count);
 
 
 	if ((fd = open(path, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR)) < 0) {
@@ -60,7 +63,7 @@ int main(int argc, char **argv) {
 
 
 	puts("Mapping file");
-	if ((data = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) == MAP_FAILED) {
+	if ((data = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, file_offset)) == MAP_FAILED) {
 		perror("Mmap failed");
 		return EXIT_FAILURE;
 	}
