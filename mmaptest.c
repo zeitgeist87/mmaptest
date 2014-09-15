@@ -17,6 +17,7 @@
 
 int main(int argc, char **argv) {
 	char buf[4096];
+	char buf2[4096];
 	int fd, i;
 	char *path;
 	unsigned int write_count;
@@ -51,7 +52,7 @@ int main(int argc, char **argv) {
 			path, file_size / 1024 / 1024, file_offset / 1024 / 1024, write_count);
 
 
-	if ((fd = open(path, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR)) < 0) {
+	if ((fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) < 0) {
 		perror("Error opening target");
 		return EXIT_FAILURE;
 	}
@@ -70,6 +71,9 @@ int main(int argc, char **argv) {
 
 	puts("Writing data...");
 	for (i = 0; i < write_count; ++i) {
+		// first read the page
+		memcpy(buf2, data + i * 4096, sizeof(buf2));
+		// then write it
 		memcpy(data + i * 4096, buf, sizeof(buf));
 		if (msync(data, file_size, MS_SYNC)) {
 			perror("Msync failed");
