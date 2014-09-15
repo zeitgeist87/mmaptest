@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
 
 
 	puts("Mapping file");
-	if ((data = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, file_offset)) == MAP_FAILED) {
+	if ((data = mmap(NULL, file_size - file_offset, PROT_READ | PROT_WRITE, MAP_SHARED, fd, file_offset)) == MAP_FAILED) {
 		perror("Mmap failed");
 		return EXIT_FAILURE;
 	}
@@ -75,14 +75,14 @@ int main(int argc, char **argv) {
 		memcpy(buf2, data + i * 4096, sizeof(buf2));
 		// then write it
 		memcpy(data + i * 4096, buf, sizeof(buf));
-		if (msync(data, file_size, MS_SYNC)) {
+		if (msync(data, file_size - file_offset, MS_SYNC)) {
 			perror("Msync failed");
 			return EXIT_FAILURE;
 		}
 	}
 
 	puts("Unmapping file...");
-	if (munmap(data, file_size)) {
+	if (munmap(data, file_size - file_offset)) {
 		perror("Munmap failed");
 		return EXIT_FAILURE;
 	}
